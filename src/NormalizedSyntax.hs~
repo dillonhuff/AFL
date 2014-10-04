@@ -1,0 +1,3 @@
+module NormalizedSyntax() where
+
+data NormalizedModule = NormalizedModule NormedDataName 

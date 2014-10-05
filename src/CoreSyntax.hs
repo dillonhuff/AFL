@@ -1,11 +1,20 @@
-module CoreSyntax() where
+module CoreSyntax(
+  CoreModule, CoreDecl,
+  coreModule, coreDecl,
+  cVarExpr) where
 
 import UniversalSyntax
 
 data CoreModule = CoreModule DataConName [CoreDecl]
+                  deriving (Eq, Ord, Show)
+
+coreModule = coreModule
 
 data CoreDecl
   = CoreDecl VarName CoreExpr
+    deriving (Eq, Ord, Show)
+
+coreDecl = CoreDecl
 
 data CoreExpr
   = CoreVarExpr VarName
@@ -15,7 +24,12 @@ data CoreExpr
   | CoreLambda VarName CoreExpr
   | CoreLet [CoreDecl] CoreExpr
   | CoreCase CoreExpr CoreAlts
+    deriving (Eq, Ord, Show)
+
+cVarExpr = CoreVarExpr
 
 data CoreAlts
-  = LitAlt Literal CoreExpr
-  | DataAlt DataConName [VarName] CoreExpr
+  = CoreLitAlt Literal CoreExpr
+  | CoreDataAlt DataConName [VarName] CoreExpr
+  | CoreWildCardAlt
+    deriving (Eq, Ord, Show)

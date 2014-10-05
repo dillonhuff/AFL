@@ -1,5 +1,6 @@
 module UniversalSyntax(
-  VarName, DataConName, Literal) where
+  VarName, DataConName, Literal,
+  var, dataCon, intLit, floatLit, charLit) where
 
 -- This is a module for syntax elements that are the same across all intermediate
 -- representations, from the core syntax to the imperative representation
@@ -8,7 +9,18 @@ data Literal
   = IntLit
   | FloatLit Double
   | CharLit Char
+    deriving (Eq, Ord, Show)
+
+intLit = IntLit
+floatLit = FloatLit
+charLit = CharLit
 
 data VarName = VarName String
+               deriving (Eq, Ord, Show)
+
+var = VarName
 
 data DataConName = DataConName String
+                   deriving (Eq, Ord, Show)
+
+dataCon = DataConName

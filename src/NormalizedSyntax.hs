@@ -24,3 +24,4 @@ data NormedExpr
 data NormedAlt
   = NormedLitAlt Literal NormedFuncBody
   | NormedDataAlt DataConName [VarName] NormedFuncBody
+  | NormedWildCardAlt

@@ -2,7 +2,7 @@ module UniversalSyntax(
   VarName, DataConName, Literal,
   Type,
   var, dataCon, intLit, floatLit, charLit,
-  getVarName) where
+  getVarName, getDataConName) where
 
 -- This is a module for syntax elements that are the same across all intermediate
 -- representations, from the core syntax to the imperative representation
@@ -35,3 +35,4 @@ data DataConName = DataConName String
                    deriving (Eq, Ord, Show)
 
 dataCon = DataConName
+getDataConName (DataConName n) = n

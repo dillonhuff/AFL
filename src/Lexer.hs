@@ -195,5 +195,3 @@ resSymbolOrBuiltinOp = do
     "->" -> return $ res op pos
     "\\" -> return $ res op pos
     _ -> return $ varName op pos
-
-

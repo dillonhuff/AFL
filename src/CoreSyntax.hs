@@ -2,7 +2,7 @@ module CoreSyntax(
   CoreModule, CoreDecl, CoreExpr,
   coreModule, coreDecl,
   cVarExpr, cAp, cLitExpr, cDataCon, cCase,
-  cDataAlt,
+  cDataAlt, cLitAlt, cWildCardAlt,
   getName) where
 
 import Data.Map as M
@@ -45,3 +45,5 @@ data CoreAlts
     deriving (Eq, Ord, Show)
 
 cDataAlt = CoreDataAlt
+cLitAlt = CoreLitAlt
+cWildCardAlt = CoreWildCardAlt

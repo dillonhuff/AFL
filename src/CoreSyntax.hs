@@ -3,9 +3,11 @@ module CoreSyntax(
   coreModule, coreDecl,
   cVarExpr) where
 
+import Data.Map as M
+
 import UniversalSyntax
 
-data CoreModule = CoreModule DataConName [CoreDecl]
+data CoreModule = CoreModule DataConName [CoreDecl] (Map DataConName Type)
                   deriving (Eq, Ord, Show)
 
 coreModule = coreModule
@@ -21,7 +23,7 @@ data CoreExpr
   | CoreDataCon DataConName [CoreExpr]
   | CoreLitExpr Literal
   | CoreAp CoreExpr CoreExpr
-  | CoreLambda VarName CoreExpr
+  | CoreLambda [VarName] CoreExpr
   | CoreLet [CoreDecl] CoreExpr
   | CoreCase CoreExpr CoreAlts
     deriving (Eq, Ord, Show)

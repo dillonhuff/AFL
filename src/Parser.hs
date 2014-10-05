@@ -1,6 +1,6 @@
 module Parser(
   parseModule,
-  parseExpr) where
+  parseExpr, parseDecl) where
 
 import Data.List as L
 import Data.Map as M
@@ -22,11 +22,22 @@ asfModule = do
   moduleTok
   moduleName <- dataConNameTok
   return $ coreModule (getDataConName moduleName) [] M.empty
-  
+
+parseDecl :: [Token] -> CoreDecl
+parseDecl toks = case parse decl "Decl Parser" toks of
+  Left err -> error $ show err
+  Right expression -> expression
+
 parseExpr :: [Token] -> CoreExpr
 parseExpr toks = case parse expr "Expr Parser" toks of
   Left err -> error $ show err
   Right expression -> expression
+
+decl = do
+  vTok <- varTok
+  equalsTok
+  res <- expr
+  return $ coreDecl (var $ nameVal vTok) res
   
 expr = buildExpressionParser table term
 

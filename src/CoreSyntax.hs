@@ -3,10 +3,11 @@ module CoreSyntax(
   coreModule, coreDecl,
   cVarExpr, cAp, cLitExpr, cDataCon, cCase, cLam, cLet,
   cDataAlt, cLitAlt, cWildCardAlt,
-  getName) where
+  getName, normalizeCoreDecl) where
 
 import Data.Map as M
 
+import NormalizedSyntax
 import UniversalSyntax
 
 data CoreModule = CoreModule DataConName [CoreDecl] (Map DataConName Type)
@@ -49,3 +50,28 @@ data CoreAlts
 cDataAlt = CoreDataAlt
 cLitAlt = CoreLitAlt
 cWildCardAlt = CoreWildCardAlt
+
+normalizeCoreDecl :: Int -> CoreDecl -> [NormedDecl]
+normalizeCoreDecl s (CoreDecl name l@(CoreLambda _ _)) =
+  [nFuncDecl name collectedVars body]
+  where
+    (collectedVars, e) = collectLambda l
+    body = normalizeBody s e
+normalizeCoreDecl s (CoreDecl name e) = eDecs ++ [normedEDecl]
+  where
+    (eDecs, normedE) = normalizeExpr s e
+    normedEDecl = nExprDecl name normedE
+
+normalizeBody :: Int -> CoreExpr -> NormedFuncBody
+normalizeBody _ _ = nExprBody $ nVarExpr $ var "x"
+
+normalizeExpr :: Int -> CoreExpr -> ([NormedDecl], NormedExpr)
+normalizeExpr _ (CoreVarExpr var) = ([], nVarExpr var)
+normalizeExpr _ (CoreLitExpr lit) = ([], nLitExpr lit)
+
+collectLambda :: CoreExpr -> ([VarName], CoreExpr)
+collectLambda expr = recCollectLambda expr []
+
+recCollectLambda :: CoreExpr -> [VarName] -> ([VarName], CoreExpr)
+recCollectLambda (CoreLambda v e) vars = recCollectLambda e (v:vars)
+recCollectLambda e vars = (reverse vars, e)

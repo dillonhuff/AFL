@@ -1,7 +1,10 @@
 module Lexer(
   Token,
   strToToks,
-  dVar, dCon, dInt, dFloat, dChar, dlp, drp, dRes) where
+  dVar, dCon, dInt, dFloat, dChar, dlp, drp, dRes,
+  isBuiltinOp, nameVal, intVal, floatVal, charVal,
+  isInt, isFloat, isChar,
+  isVarName, isDataConName, isName, pos) where
 
 import Text.ParserCombinators.Parsec
 import Text.Parsec.Pos
@@ -50,8 +53,36 @@ pos (Character _ p) = p
 pos (Res _ p) = p
 pos (Delim _ p) = p
 
-hasName name (VarName n _) = name == n
-hasName _ _ = False
+isName (VarName _ _) = True
+isName (DataConstructorName _ _) = True
+isName _ = False
+
+isVarName (VarName _ _) = True
+isVarName _ = False
+
+isDataConName (DataConstructorName _ _) = True
+isDataConName _ = False
+
+isInt (IntNum _ _) = True
+isInt _ = False
+
+isFloat (FloatNum _ _) = True
+isFloat _ = False
+
+isChar (Character _ _) = True
+isChar _ = False
+
+nameVal (VarName n _) = n
+nameVal (DataConstructorName n _) = n
+
+intVal (IntNum v _) = v
+floatVal (FloatNum v _) = v
+charVal (Character c _) = c
+
+builtinOps = ["==", ">", "<", ">=", "<=", "~", "+", "-", "*", "/", "&&", "||"]
+
+isBuiltinOp (VarName n _) = elem n builtinOps
+isBuiltinOp _ = False
 
 varName = VarName
 dataConstructorName = DataConstructorName
@@ -164,3 +195,5 @@ resSymbolOrBuiltinOp = do
     "->" -> return $ res op pos
     "\\" -> return $ res op pos
     _ -> return $ varName op pos
+
+

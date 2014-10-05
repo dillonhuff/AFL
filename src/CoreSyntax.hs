@@ -1,7 +1,9 @@
 module CoreSyntax(
-  CoreModule, CoreDecl,
+  CoreModule, CoreDecl, CoreExpr,
   coreModule, coreDecl,
-  cVarExpr) where
+  cVarExpr, cAp, cLitExpr, cDataCon, cCase,
+  cDataAlt,
+  getName) where
 
 import Data.Map as M
 
@@ -25,13 +27,21 @@ data CoreExpr
   | CoreAp CoreExpr CoreExpr
   | CoreLambda [VarName] CoreExpr
   | CoreLet [CoreDecl] CoreExpr
-  | CoreCase CoreExpr CoreAlts
+  | CoreCase CoreExpr [CoreAlts]
     deriving (Eq, Ord, Show)
 
+cLitExpr = CoreLitExpr
 cVarExpr = CoreVarExpr
+cDataCon = CoreDataCon
+cAp = CoreAp
+cCase = CoreCase
+
+getName (CoreVarExpr name) = getVarName name
 
 data CoreAlts
   = CoreLitAlt Literal CoreExpr
   | CoreDataAlt DataConName [VarName] CoreExpr
   | CoreWildCardAlt
     deriving (Eq, Ord, Show)
+
+cDataAlt = CoreDataAlt

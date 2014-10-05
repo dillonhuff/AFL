@@ -1,74 +1,29 @@
 module Parser(
-  parseProgram,
-  parseExpr,
-  parseRecord) where
+  parseModule,
+  parseExpr) where
 
+import Data.List as L
+import Data.Map as M
 import Text.Parsec.Expr
 import Text.ParserCombinators.Parsec.Combinator
 import Text.Parsec.Pos
 import Text.Parsec.Prim
 
 import Lexer as Lex
-import Program
-import Syntax as Syn
+import CoreSyntax as Syn
+import UniversalSyntax
 
-parseProgram :: [Token] -> ILProgram
-parseProgram toks = case parse ilProg "Program Parser" toks of
+parseModule :: [Token] -> CoreModule
+parseModule toks = case parse asfModule "Program Parser" toks of
   Left err -> error $ show err
   Right p -> p
 
-data ILProgComponent = ILF ILFunction
-                     | ILR RecordDef
-                       deriving (Show)
-                                
-isFunc (ILF _) = True
-isFunc _ = False
-
-isRecDec (ILR _) = True
-isRecDec _ = False
-
-ilf (ILF f) = f
-
-ilr (ILR r) = r
-
-ilProg = do
-  progComps <- many (programComponent)
-  let funcs = map ilf $ filter isFunc progComps
-      recDecs = map ilr $ filter isRecDec progComps in
-    return $ ilProgram funcs recDecs
+asfModule = do
+  moduleTok
+  moduleName <- dataConNameTok
+  return $ coreModule (dataCon $ getName moduleName) [] M.empty
   
-programComponent = funcComp <|> recordDefComp
-
-funcComp = do
-  func <- ilFunction
-  return $ ILF func
-  
-recordDefComp = do
-  recDef <- record
-  return $ ILR recDef
-
-ilFunction = do
-  defTok
-  name <- anyNameTok
-  args <- many anyNameTok
-  asTok
-  body <- expr
-  return $ ilFunc (nameVal name) (map nameVal args) body
-  
-parseRecord :: [Token] -> RecordDef
-parseRecord toks = case parse record "Record Parser" toks of
-  Left err -> error $ show err
-  Right recDec -> recDec
-
-record = do
-  recordTok
-  name <- anyNameTok
-  lBracket
-  fields <- sepBy anyNameTok commaTok
-  rBracket
-  return $ ilRecordDef (nameVal name) (map nameVal fields)
-
-parseExpr :: [Token] -> Expr
+parseExpr :: [Token] -> CoreExpr
 parseExpr toks = case parse expr "Expr Parser" toks of
   Left err -> error $ show err
   Right expression -> expression
@@ -106,26 +61,25 @@ binaryOp opName = do
   nameTok opName
   return $ bop opName
 
-bop opName arg1 arg2 = ap (ap (var opName) arg1) arg2
+bop opName arg1 arg2 = cAp (cAp (cVarExpr $ var opName) arg1) arg2
 
 unaryOp opName = do
   nameTok opName
   return $ unop opName
   
-unop opName arg = ap (var opName) arg
+unop opName arg = cAp (cVarExpr $ var opName) arg
 
 term = parens expr
        <|> funcAp
        <|> numberTok
-       <|> namedTok
-       <|> booleanTok
-       <|> ifThenElseSt
+       <|> varNameTok
+       <|> dataConNameTok
 
 funcArg = try (parens builtinOperator)
           <|> parens expr
           <|> numberTok
-          <|> namedTok
-          <|> booleanTok
+          <|> varNameTok
+          <|> dataConNameTok
 
 parens e = do
   lParen
@@ -134,67 +88,54 @@ parens e = do
   return x
 
 numberTok = do
-  nt <- numTok
-  return $ Syn.num $ numVal nt
+  nt <- intTok
+  return $ cLitExpr $ intLit (intVal nt)
   
-booleanTok = do
-  bt <- boolTok
-  return $ bool $ boolVal bt
+varNameTok = do
+  t <- varTok
+  return $ cVarExpr $ var $ nameVal t
 
-namedTok = do
-  t <- anyNameTok
-  return $ var $ nameVal t
-  
-ifThenElseSt = do
-  ifTok
-  condE <- expr
-  thenTok
-  thenE <- expr
-  elseTok
-  elseE <- expr
-  return $ ite condE thenE elseE
+dataConNameTok = do
+  t <- dataConTok
+  return $ cVarExpr $ var $ nameVal t
 
 builtinOperator = do
   t <- builtinOpTok
-  return $ var $ nameVal t
+  return $ cVarExpr $ var $ nameVal t
   
 funcAp = do
   funcName <- anyNameTok
   args <- many funcArg
   let fName = nameVal funcName
-  return $ application (var fName) args
+  return $ application (cVarExpr $ var fName) args
   
-application :: Expr -> [Expr] -> Expr
+application :: CoreExpr -> [CoreExpr] -> CoreExpr
 application e [] = e
-application e (x:xs) = application (ap e x) xs
-
-defTok = ilTok (== ddef)
-asTok = ilTok (== das)
-ifTok = ilTok (== dif)
-thenTok = ilTok (== dthen)
-elseTok = ilTok (== delse)
-recordTok = ilTok (== drecord)
+application e (x:xs) = application (cAp e x) xs
 
 lParen = ilTok (== dlp)
 rParen = ilTok (== drp)
-lBracket = ilTok (== dlb)
-rBracket = ilTok (== drb)
-commaTok = ilTok (== dcomma)
+
+-- Reserved word tokens
+moduleTok = ilTok (== (dRes "module"))
 
 anyNameTokOtherThan forbiddenNames = ilTok (\t -> isName t && (not $ Prelude.elem t forbiddenNames))
 
 anyNameTok :: (Monad m) => ParsecT [Token] u m Token
-anyNameTok = ilTok (\t -> isName t && (not $ isBuiltinOp t))
+anyNameTok = ilTok (\t -> isVarName t && (not $ isBuiltinOp t))
+
+varTok = ilTok isVarName
 
 builtinOpTok = ilTok isBuiltinOp
 
+dataConTok :: (Monad m) => ParsecT [Token] u m Token
+dataConTok = ilTok isDataConName
+
+intTok :: (Monad m) => ParsecT [Token] u m Token
+intTok = ilTok isInt
+
 nameTok :: (Monad m) => String -> ParsecT [Token] u m Token
-nameTok name = ilTok (hasName name)
-
-numTok :: (Monad m) => ParsecT [Token] u m Token
-numTok = ilTok isNum
-
-boolTok = ilTok isBool
+nameTok name = ilTok (\t -> isName t && nameVal t == name)
 
 ilTok :: (Monad m) => (Token -> Bool) -> ParsecT [Token] u m Token
 ilTok condition = tokenPrim show updatePos meetsCond

@@ -17,5 +17,5 @@ cabal-version:       >=1.8
 executable AFL
   main-is:             Main.hs
   -- other-modules:       
-  build-depends:       base ==4.6.*, haskell-src-exts ==1.15.*
+  build-depends:       base ==4.6.*, haskell-src-exts ==1.15.*, containers, parsec
   hs-source-dirs:      src

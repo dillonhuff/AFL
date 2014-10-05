@@ -75,6 +75,32 @@ term = parens expr
        <|> varNameTok
        <|> dataConstructorCall
        <|> caseExpr
+       <|> lambdaExpr
+       <|> letExpr
+
+letExpr = do
+  letTok
+  vDecs <- sepBy varDec commaTok
+  inTok
+  res <- expr
+  return $ cLet vDecs res
+
+varDec = do
+  varN <- varTok
+  equalsTok
+  res <- expr
+  return $ coreDecl (var $ nameVal varN) res
+
+lambdaExpr = do
+  lambdaTok
+  vars <- many1 varTok
+  arrowTok
+  res <- expr
+  return $ makeLambdas (L.map (var . nameVal) vars) res
+
+makeLambdas :: [VarName] -> CoreExpr -> CoreExpr
+makeLambdas [] e = e
+makeLambdas (x:xs) e = cLam x (makeLambdas xs e)
 
 caseExpr = do
   caseTok
@@ -83,7 +109,10 @@ caseExpr = do
   alternatives <- many1 alternative
   return $ cCase mainExpr alternatives
 
-alternative = intLitAlt <|> dataAlt
+alternative = do
+  barTok
+  alt <- intLitAlt <|> dataAlt
+  return alt
 
 intLitAlt = do
   integerVal <- intTok
@@ -154,6 +183,12 @@ moduleTok = ilTok (== (dRes "module"))
 ofTok = ilTok (== (dRes "of"))
 caseTok = ilTok (== (dRes "case"))
 arrowTok = ilTok (== (dRes "->"))
+barTok = ilTok (== (dRes "|"))
+lambdaTok = ilTok (== (dRes "\\"))
+letTok = ilTok (== (dRes "let"))
+inTok = ilTok (== (dRes "in"))
+commaTok = ilTok (== (dRes ","))
+equalsTok = ilTok (== (dRes "="))
 
 anyNameTokOtherThan forbiddenNames = ilTok (\t -> isName t && (not $ Prelude.elem t forbiddenNames))
 

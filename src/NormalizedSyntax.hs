@@ -19,7 +19,7 @@ data NormedExpr
   = NormedVarExpr VarName
   | NormedAp VarName [NormedExpr]
   | NormedLitExpr Literal
-  | NormedSingletonData DataConName
+  | NormedUnaryData DataConName
 
 data NormedAlt
   = NormedLitAlt Literal NormedFuncBody

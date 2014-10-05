@@ -172,6 +172,8 @@ delim = do
        <|> string ")"
   return $ delimiter d pos
 
+reservedOps = [",", "\\", "->", "|", "="]
+
 resSymbolOrBuiltinOp :: Parser Token
 resSymbolOrBuiltinOp = do
   pos <- getPosition
@@ -179,6 +181,7 @@ resSymbolOrBuiltinOp = do
         <|> try (string "<=")
         <|> try (string ">=")
         <|> try (string "->")
+        <|> try (string "||")
         <|> string "="
         <|> string "-"
         <|> string "<"
@@ -186,12 +189,11 @@ resSymbolOrBuiltinOp = do
         <|> string "+" 
         <|> string "*"
         <|> string "/"
-        <|> string "||"
+        <|> string "|"
         <|> string "&&"
         <|> string "~"
         <|> string "\\"
-  case op of
-    "=" -> return $ res op pos
-    "->" -> return $ res op pos
-    "\\" -> return $ res op pos
+        <|> string ","
+  case elem op reservedOps of
+    True -> return $ res op pos
     _ -> return $ varName op pos

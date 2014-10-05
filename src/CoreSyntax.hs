@@ -1,7 +1,7 @@
 module CoreSyntax(
   CoreModule, CoreDecl, CoreExpr,
   coreModule, coreDecl,
-  cVarExpr, cAp, cLitExpr, cDataCon, cCase,
+  cVarExpr, cAp, cLitExpr, cDataCon, cCase, cLam, cLet,
   cDataAlt, cLitAlt, cWildCardAlt,
   getName) where
 
@@ -25,7 +25,7 @@ data CoreExpr
   | CoreDataCon DataConName [CoreExpr]
   | CoreLitExpr Literal
   | CoreAp CoreExpr CoreExpr
-  | CoreLambda [VarName] CoreExpr
+  | CoreLambda VarName CoreExpr
   | CoreLet [CoreDecl] CoreExpr
   | CoreCase CoreExpr [CoreAlts]
     deriving (Eq, Ord, Show)
@@ -33,6 +33,8 @@ data CoreExpr
 cLitExpr = CoreLitExpr
 cVarExpr = CoreVarExpr
 cDataCon = CoreDataCon
+cLam = CoreLambda
+cLet = CoreLet
 cAp = CoreAp
 cCase = CoreCase
 

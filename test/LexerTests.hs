@@ -10,6 +10,8 @@ allLexerTests = do
 lexCases =
   [("\\", [dRes "\\"]),
    ("->", [dRes "->"]),
+   ("|", [dRes "|"]),
+   (",", [dRes ","]),
    ("case", [dRes "case"]),
    ("of", [dRes "of"]),
    ("module", [dRes "module"]),

@@ -93,10 +93,7 @@ varOrResword = try var <|> resWord
 resWord :: Parser Token
 resWord = do
   pos <- getPosition
-  resStr <- string "\\"
-            <|> string "->"
-            <|> string "="
-            <|> string "case"
+  resStr <- string "case"
             <|> string "of"
             <|> string "module"
             <|> string "where"
@@ -144,19 +141,26 @@ delim = do
        <|> string ")"
   return $ delimiter d pos
 
-builtinOp :: Parser Token
-builtinOp = do
+resSymbolOrBuiltinOp :: Parser Token
+resSymbolOrBuiltinOp = do
   pos <- getPosition
   op <- try (string "==")
         <|> try (string "<=")
         <|> try (string ">=")
+        <|> try (string "->")
+        <|> string "="
+        <|> string "-"
         <|> string "<"
         <|> string ">"
         <|> string "+" 
-        <|> string "-"
         <|> string "*"
         <|> string "/"
         <|> string "||"
         <|> string "&&"
         <|> string "~"
-  return $ varName op pos
+        <|> string "\\"
+  case op of
+    "=" -> return $ res op pos
+    "->" -> return $ res op pos
+    "\\" -> return $ res op pos
+    _ -> return $ varName op pos

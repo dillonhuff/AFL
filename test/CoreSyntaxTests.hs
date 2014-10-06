@@ -8,7 +8,7 @@ import TestUtils
 import UniversalSyntax
 
 allCoreSyntaxTests = do
-  testFunction ((normalizeCoreDecl 0) . parseDecl . strToToks)  normCoreCases
+  testFunction ((normalizeCoreDecl "0") . parseDecl . strToToks)  normCoreCases
 
 normCoreCases =
   [("f = \\x y z -> x",
@@ -16,6 +16,9 @@ normCoreCases =
      [var "x", var "y", var "z"]
      (nExprBody $ nVarExpr $ var "x")]),
    ("d = 123", [nExprDecl (var "d") (nLitExpr $ intLit 123)]),
-   ("d = erER", [nExprDecl (var "d") (nVarExpr $ var "erER")])]
+   ("d = erER", [nExprDecl (var "d") (nVarExpr $ var "erER")]),
+   ("boolVal = True", [nExprDecl (var "boolVal") (nNullDataCon $ dataCon "True")]),
+   ("q = \\wer -> wer",
+    [nFuncDecl (var "q") [var "wer"] (nExprBody $ nVarExpr $ var "wer")])]
 
 

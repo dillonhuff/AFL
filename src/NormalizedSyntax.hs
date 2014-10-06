@@ -1,7 +1,7 @@
 module NormalizedSyntax(
   NormedDecl, NormedExpr, NormedFuncBody, NormedAlt,
-  nFuncDecl, nExprDecl,
-  nVarExpr, nExprBody, nLitExpr) where
+  nFuncDecl, nExprDecl, nLetBody,
+  nVarExpr, nExprBody, nLitExpr, nNullDataCon) where
 
 import UniversalSyntax
 
@@ -24,17 +24,19 @@ data NormedFuncBody
   | NormedFail
     deriving (Eq, Ord, Show)
 
+nLetBody = NormedLetBody
 nExprBody = NormedExprBody
 
 data NormedExpr
   = NormedVarExpr VarName
   | NormedAp VarName [NormedExpr]
   | NormedLitExpr Literal
-  | NormedUnaryData DataConName
+  | NormedNullData DataConName
     deriving (Eq, Ord, Show)
 
 nVarExpr = NormedVarExpr
 nLitExpr = NormedLitExpr
+nNullDataCon = NormedNullData
 
 data NormedAlt
   = NormedLitAlt Literal NormedFuncBody
